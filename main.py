@@ -19,7 +19,8 @@ class ScheduleData:
     power_by_clock_state: list[int]
     tasks: list[Task]
 
-# parse file function 
+
+# parse file function
 def parse_input_file(filename):
     with open(filename, 'r', encoding='utf-8') as f:
         line = f.readline().strip().split(" ")
@@ -61,4 +62,5 @@ if __name__ == '__main__':
     elif sched_type == "EDF" and ee is True:
         print("Using EE-EDF")
 
-    parse_input_file(fn)
+    sched_data = parse_input_file(fn)
+    print(sched_data)
