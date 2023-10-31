@@ -21,7 +21,7 @@ class ScheduleData:
 
 
 def parse_input_file(filename):
-    with open(filename, 'r') as f:
+    with open(filename, 'r', encoding='utf-8') as f:
         line = f.readline().strip().split(" ")
         task_count = int(line[0])
         exec_time = int(line[1])
