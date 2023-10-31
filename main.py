@@ -19,7 +19,7 @@ class ScheduleData:
     power_by_clock_state: list[int]
     tasks: list[Task]
 
-
+# parse file function 
 def parse_input_file(filename):
     with open(filename, 'r', encoding='utf-8') as f:
         line = f.readline().strip().split(" ")
