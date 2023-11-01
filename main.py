@@ -21,7 +21,7 @@ class ScheduleData:
 
 
 # parse file function
-def parse_input_file(filename):
+def parse_input_file(filename) -> ScheduleData:
     with open(filename, 'r', encoding='utf-8') as f:
         line = f.readline().strip().split(" ")
         task_count = int(line[0])
@@ -39,7 +39,6 @@ def parse_input_file(filename):
 
 if __name__ == '__main__':
     if len(sys.argv) < 3 or len(sys.argv) > 4:
-        print(len(sys.argv))
         print("Wrong number of args:\n"
               "main.py <input_file_name> <EDF or RM> [EE]")
         exit()
