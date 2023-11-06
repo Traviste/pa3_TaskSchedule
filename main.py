@@ -1,5 +1,6 @@
 import sys
 from utils import Task, ScheduleData, parse_input_file
+from edf import run_edf
 
 if __name__ == '__main__':
     if len(sys.argv) < 3 or len(sys.argv) > 4:
@@ -25,6 +26,6 @@ if __name__ == '__main__':
         print("Using EE-RM")
     elif sched_type == "EDF" and ee is False:
         print("Using EDF")
+        run_edf(sched_data)
     elif sched_type == "EDF" and ee is True:
         print("Using EE-EDF")
-
