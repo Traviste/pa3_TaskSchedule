@@ -5,10 +5,20 @@ CLOCK_STATE_TO_FREQ_MAP = [1188, 918, 648, 384, 0]
 
 
 @dataclass
+class ScheduleBlock:
+    name: str
+    frequency: int
+    power_at_frequency: int
+
+
+@dataclass
 class Task:
     name: str
     period: int
     wcet_by_clock_state: list[int]
+    next_deadline: int
+    complete: bool = False
+    percent_complete: float = 0.0
 
 
 @dataclass
@@ -30,7 +40,13 @@ def parse_input_file(filename) -> ScheduleData:
 
         for i, line in enumerate(f):
             line = line.strip().split(" ")
-            tasks.append(Task(line[0], int(line[1]), [int(line[2]), int(line[3]), int(line[4]), int(line[5])]))
+            tasks.append(
+                Task(line[0],
+                     int(line[1]),
+                     [int(line[2]), int(line[3]), int(line[4]), int(line[5])],
+                     int(line[1]),
+                     )
+            )
 
     data = ScheduleData(task_count, exec_time, clock_state_power, tasks)
     return data
