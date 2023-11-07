@@ -1,4 +1,4 @@
-from utils import ScheduleData, Task
+from utils import ScheduleData, Task, ScheduleBlock, CLOCK_STATE_TO_FREQ_MAP
 
 
 def update_task_deadlines(current_time: int, data: ScheduleData):
@@ -24,7 +24,7 @@ def find_earliest_incomplete_task(data: ScheduleData):
 
 
 def run_edf(data: ScheduleData):
-    vector = []
+    sched_vector: list[ScheduleBlock] = []
 
     for i in range(0, data.exec_time):
         earliest = find_earliest_incomplete_task(data)
@@ -36,8 +36,23 @@ def run_edf(data: ScheduleData):
                 earliest.percent_complete = 1.0
                 earliest.complete = True
 
-            print(earliest)
+            sched_vector.append(ScheduleBlock(earliest.name, 0, data.power_by_clock_state[0], idle=False))
         else:
-            print("IDLE")
+            sched_vector.append(ScheduleBlock("IDLE", 4, data.power_by_clock_state[4], idle=True))
 
         update_task_deadlines(i, data)
+
+    last_block = sched_vector[0]
+    time_count = 0
+    time_started = 0
+
+    for i in range(1, len(sched_vector)):
+        if sched_vector[i].task_name == last_block.task_name:
+            time_count = time_count + 1
+        else:
+            print(f"{time_started}\t{last_block.task_name}\t{CLOCK_STATE_TO_FREQ_MAP[last_block.frequency]}\t{time_count}\t{1}")
+
+            time_count = 0
+            time_started = i
+
+        last_block = sched_vector[i]

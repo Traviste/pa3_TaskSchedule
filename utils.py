@@ -1,24 +1,30 @@
 from dataclasses import dataclass
 
 # In MHz
-CLOCK_STATE_TO_FREQ_MAP = [1188, 918, 648, 384, 0]
+CLOCK_STATE_TO_FREQ_MAP = [1188, 918, 648, 384, "IDLE"]
 
 
 @dataclass
 class ScheduleBlock:
-    name: str
+    task_name: str
     frequency: int
     power_at_frequency: int
+    idle: bool = False
 
 
 @dataclass
 class Task:
+    # Read from simulation input
     name: str
     period: int
     wcet_by_clock_state: list[int]
-    next_deadline: int
+
+    # Schedule Specific
+    # TODO check instantiation of this,
+    time_remaining: int = 0
+    next_deadline: int = 0
     complete: bool = False
-    percent_complete: float = 0.0
+    clock_state: int = 0
 
 
 @dataclass
@@ -44,7 +50,6 @@ def parse_input_file(filename) -> ScheduleData:
                 Task(line[0],
                      int(line[1]),
                      [int(line[2]), int(line[3]), int(line[4]), int(line[5])],
-                     int(line[1]),
                      )
             )
 
