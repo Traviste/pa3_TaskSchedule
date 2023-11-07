@@ -18,14 +18,13 @@ if __name__ == '__main__':
         ee = True
 
     sched_data = parse_input_file(fn)
-    print(sched_data)
 
     if sched_type == "RM" and ee is False:
         print("Using RM")
-    elif sched_type == "RM" and ee is True:
+    elif sched_type == "RM" and ee:
         print("Using EE-RM")
     elif sched_type == "EDF" and ee is False:
         print("Using EDF")
         run_edf(sched_data)
-    elif sched_type == "EDF" and ee is True:
+    elif sched_type == "EDF" and ee:
         print("Using EE-EDF")
