@@ -1,7 +1,7 @@
 import sys
 from utils import Task, ScheduleData, parse_input_file
 from edf import run_edf
-
+from rm import run_rm
 if __name__ == '__main__':
     if len(sys.argv) < 3 or len(sys.argv) > 4:
         print("Wrong number of args:\n"
@@ -21,6 +21,7 @@ if __name__ == '__main__':
 
     if sched_type == "RM" and ee is False:
         print("Using RM")
+        run_rm(sched_data)
     elif sched_type == "RM" and ee:
         print("Using EE-RM")
     elif sched_type == "EDF" and ee is False:

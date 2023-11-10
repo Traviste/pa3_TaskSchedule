@@ -1,6 +1,7 @@
 import math
 from utils import Task, ScheduleData, ScheduleBlock, CLOCK_STATE_TO_FREQ_MAP
 
+
 def next(data: ScheduleData):
     #prioritize by lowest period
     next_lowest_period = None
@@ -9,12 +10,12 @@ def next(data: ScheduleData):
         if next_lowest_period == None:
             next_lowest_period = t.period
         else:
-            if (t.complete == False and t.period < next_lowest_period):
+            if (t.time_remaining == 0 and t.period < next_lowest_period):
                 next_period = t
     
     return next_period
 
-def rm_schedule(data: ScheduleData):
+def run_rm(data: ScheduleData):
     hyperperiod = data.exec_time
     sched_vector: list[ScheduleBlock] = []
 
@@ -22,17 +23,12 @@ def rm_schedule(data: ScheduleData):
     for current_time in range(0, hyperperiod):
         next_Task = next(data)
         if next_Task is not None:
-            next_Task.complete = 1.0/next_Task.wcet_by_clock_state[0]
 
-            if next_Task.complete >= 1.0:
-                next_Task.percent_complete = 1
-                next_Task.complete = True
-
-            sched_vector.append(ScheduleBlock(next_Task.name, next_Task.power_by_clock_state[0], idle = False))
-            print("Append block Task")
+            next_Task.time_remaining = next_Task.time_remaining - 1
+        
+            sched_vector.append(ScheduleBlock(next_Task.name, 0, data.power_by_clock_state[next_Task.clock_state]))
         else:
-            sched_vector.append(ScheduleBlock("IDLE", next_Task.power_by_clock_state[4], idle = True))
-            print("Append Block Idle")
+            sched_vector.append(ScheduleBlock("IDLE", 4, data.power_by_clock_state[4]))
         
         for t in data.tasks:
             if current_time >= t.next_deadline:
@@ -40,6 +36,20 @@ def rm_schedule(data: ScheduleData):
                 t.complete = False
                 t.complete = 0.0
 
-    #iterate through scheduling vector
+    last_block = sched_vector[0]
+    time_count = 1
+    time_started = 1
 
-#print(f'{current_time} {data.task[0].name} {data.CPU frequency} {how long it ran for} {energy consumed in joules}J)
+    #iterate through scheduling vector
+    for i in range(1, len(sched_vector)):
+        if (sched_vector[i].task_name == last_block.task_name) and i != (len(sched_vector) - 1):
+            time_count = time_count + 1
+        else:
+            power_used = (last_block.power_at_frequency * time_count) / 1000.0
+            print(f"{time_started}\t{last_block.task_name}\t"
+                  f"{CLOCK_STATE_TO_FREQ_MAP[last_block.frequency]}\t{time_count}\t{power_used} J")
+
+            time_count = 1
+            time_started = i + 1
+
+        last_block = sched_vector[i]
