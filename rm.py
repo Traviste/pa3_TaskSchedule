@@ -10,7 +10,7 @@ def next(data: ScheduleData):
         if next_lowest_period == None:
             next_lowest_period = t.period
         else:
-            if (t.time_remaining == 0 and t.period < next_lowest_period):
+            if (t.time_remaining > 0 and t.period < next_lowest_period):
                 next_period = t
     
     return next_period
