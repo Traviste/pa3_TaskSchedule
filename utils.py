@@ -20,7 +20,6 @@ class Task:
     wcet_by_clock_state: list[int]
 
     # Schedule Specific
-    # TODO check instantiation of this,
     time_remaining: int = 0
     next_deadline: int = 0
     complete: bool = False
@@ -42,7 +41,7 @@ def parse_input_file(filename) -> ScheduleData:
         task_count = int(line[0])
         exec_time = int(line[1])
         clock_state_power = [int(line[2]), int(line[3]), int(line[4]), int(line[5]), int(line[6])]
-        tasks = []
+        tasks: list[Task] = []
 
         for i, line in enumerate(f):
             line = line.strip().split(" ")
@@ -50,6 +49,7 @@ def parse_input_file(filename) -> ScheduleData:
                 Task(line[0],
                      int(line[1]),
                      [int(line[2]), int(line[3]), int(line[4]), int(line[5])],
+                     next_deadline=int(line[1]), time_remaining=int(line[2])
                      )
             )
 
