@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 # In MHz
-CLOCK_STATE_TO_FREQ_MAP = [1188, 918, 648, 384, "IDLE"]
+CLOCK_STATE_TO_FREQ_MAP = ["1188", "918", "648", "384", "IDLE"]
 
 
 @dataclass
@@ -9,7 +9,6 @@ class ScheduleBlock:
     task_name: str
     frequency: int
     power_at_frequency: int
-    idle: bool = False
 
 
 @dataclass
