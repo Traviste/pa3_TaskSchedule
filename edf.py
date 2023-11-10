@@ -6,14 +6,13 @@ def update_task_deadlines(current_time: int, data: ScheduleData):
         if current_time >= t.next_deadline:
             t.next_deadline = t.next_deadline + t.period
             t.time_remaining = t.wcet_by_clock_state[t.clock_state]
-            t.complete = False
 
 
 def find_earliest_incomplete_task(data: ScheduleData):
     earliest: None or Task = None
 
     for t in data.tasks:
-        if t.complete is False:
+        if t.time_remaining > 0:
             if earliest is None:
                 earliest = t
             else:
@@ -31,9 +30,6 @@ def run_edf(data: ScheduleData):
 
         if earliest is not None:
             earliest.time_remaining = earliest.time_remaining - 1
-
-            if earliest.time_remaining == 0:
-                earliest.complete = True
 
             sched_vector.append(ScheduleBlock(earliest.name, 0, data.power_by_clock_state[earliest.clock_state], idle=False))
         else:

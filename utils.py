@@ -22,7 +22,6 @@ class Task:
     # Schedule Specific
     time_remaining: int = 0
     next_deadline: int = 0
-    complete: bool = False
     clock_state: int = 0
 
 
