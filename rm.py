@@ -1,6 +1,11 @@
 import math
 from utils import Task, ScheduleData, ScheduleBlock, CLOCK_STATE_TO_FREQ_MAP
 
+def update_deadlines(current_time: int, data: ScheduleData):
+    for t in data.tasks:
+        if current_time >= t.next_deadline:
+            t.next_deadline = t.next_deadline + t.period
+            t.time_remaining = t.wcet_by_clock_state[t.clock_state]
 
 def next(data: ScheduleData):
     #prioritize by lowest period
@@ -30,11 +35,7 @@ def run_rm(data: ScheduleData):
         else:
             sched_vector.append(ScheduleBlock("IDLE", 4, data.power_by_clock_state[4]))
         
-        for t in data.tasks:
-            if current_time >= t.next_deadline:
-                t.next_deadline = t.period + current_time
-                t.complete = False
-                t.complete = 0.0
+        update_deadlines(current_time, data)
 
     last_block = sched_vector[0]
     time_count = 1
