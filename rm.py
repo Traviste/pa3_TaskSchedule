@@ -40,7 +40,9 @@ def run_rm(data: ScheduleData):
     last_block = sched_vector[0]
     time_count = 1
     time_started = 1
-
+    energy_consumed = 0
+    idle_time = 0
+    
     #iterate through scheduling vector
     for i in range(1, len(sched_vector)):
         if (sched_vector[i].task_name == last_block.task_name) and i != (len(sched_vector) - 1):
@@ -49,8 +51,15 @@ def run_rm(data: ScheduleData):
             power_used = (last_block.power_at_frequency * time_count) / 1000.0
             print(f"{time_started}\t{last_block.task_name}\t"
                   f"{CLOCK_STATE_TO_FREQ_MAP[last_block.frequency]}\t{time_count}\t{power_used} J")
+            energy_consumed += power_used
 
             time_count = 1
             time_started = i + 1
+        
+        if(sched_vector[i].task_name == "IDLE"):
+            idle_time += time_count
 
         last_block = sched_vector[i]
+    
+    percent_idle = (idle_time/time_started) * 100
+    print(f"Execution Time: {time_started}, Percent Idle Time: {percent_idle}%, Total Energy Consumption: {energy_consumed}J")
