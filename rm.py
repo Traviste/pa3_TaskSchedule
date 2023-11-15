@@ -52,12 +52,11 @@ def run_rm(data: ScheduleData):
             print(f"{time_started}\t{last_block.task_name}\t"
                   f"{CLOCK_STATE_TO_FREQ_MAP[last_block.frequency]}\t{time_count}\t{power_used} J")
             energy_consumed += power_used
+            if(last_block.task_name ==  "IDLE"):
+                idle_time += time_count
 
             time_count = 1
             time_started = i + 1
-        
-        if(sched_vector[i].task_name == "IDLE"):
-            idle_time += time_count
 
         last_block = sched_vector[i]
     
