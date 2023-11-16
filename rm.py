@@ -105,7 +105,7 @@ def run_rm(data: ScheduleData):
 
     #create scheduling vector
     for current_time in range(1, hyperperiod+1):
-        valid = update_deadlines(current_time, data)
+        valid = valid and update_deadlines(current_time, data)
         next_Task = next(data)
 
         if next_Task is not None:
