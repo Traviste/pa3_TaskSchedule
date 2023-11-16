@@ -99,12 +99,11 @@ def find_optimal_rm_ee(base_data: ScheduleData):
 
 
 def run_rm(data: ScheduleData):
-    hyperperiod = data.exec_time
     sched_vector: list[ScheduleBlock] = []
     valid = True
 
     #create scheduling vector
-    for current_time in range(1, hyperperiod+1):
+    for current_time in range(1, data.exec_time+1):
         valid = valid and update_deadlines(current_time, data)
         next_Task = next(data)
 
@@ -117,6 +116,4 @@ def run_rm(data: ScheduleData):
             sched_vector.append(ScheduleBlock("IDLE", 4, data.power_by_clock_state[4]))
 
     print_schedule_summary(data, sched_vector)
-    print(f"Valid ? = {valid}")
-    print(f"Hyperperiod = {calculate_hyperperiod(data.tasks)} s")
-    print(f"Power = {compute_power_usage(sched_vector)}")
+    print(f"Valid Sched. ? = {valid}")

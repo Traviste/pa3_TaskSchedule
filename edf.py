@@ -162,6 +162,4 @@ def run_edf(data: ScheduleData):
             sched_vector.append(ScheduleBlock("IDLE", 4, data.power_by_clock_state[4]))
 
     print_schedule_summary(data, sched_vector)
-    print(f"Valid ? = {valid}")
-    print(f"Hyperperiod = {calculate_hyperperiod(data.tasks)} s")
-    print(f"Power = {compute_power_usage(sched_vector)}")
+    print(f"Valid Sched. ? = {valid}")
