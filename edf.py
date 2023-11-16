@@ -99,50 +99,54 @@ def find_optimal_edf_ee(base_data: ScheduleData):
         # Apply each combination of states to the tasks
         for i, task in enumerate(data.tasks):
             task.clock_state = state[i]
+            task.time_remaining = task.wcet_by_clock_state[task.clock_state]
 
         sched_vector: list[ScheduleBlock] = []
 
         # Simulate the schedule
         for t in range(1, h + 1):
-            # update deadlines based on current time
-            valid = update_task_deadlines(t, data)
-
-            if not valid:
+            # update deadlines based on current time and check for deadline misses
+            if not update_task_deadlines(t, data):
                 break
 
             earliest = find_earliest_incomplete_task(data)
 
             if earliest is not None:
                 earliest.time_remaining = earliest.time_remaining - 1
+                data.total_energy += data.power_by_clock_state[earliest.clock_state]
 
                 if t <= data.exec_time:
                     sched_vector.append(
                         ScheduleBlock(earliest.name, earliest.clock_state,
                                       data.power_by_clock_state[earliest.clock_state]))
             else:
+                data.total_energy += data.power_by_clock_state[4]
+
                 if t <= data.exec_time:
                     sched_vector.append(ScheduleBlock("IDLE", 4, data.power_by_clock_state[4]))
 
         if not valid:
-            print(f"{k}\t : Invalid Schedule")
+            # print(f"{k}\t : Invalid Schedule")
             continue
 
-        data.total_energy = compute_power_usage(sched_vector, n_iterations_inclusive=1000)
+        # data.total_energy = compute_power_usage(sched_vector, n_iterations_inclusive=1000)
+        data.total_energy = data.total_energy / 1000.0
 
         # Find schedule with least energy usage
         if most_efficient is None:
             most_efficient = data
             eff_vector = sched_vector
+
         elif most_efficient.total_energy > data.total_energy:
             most_efficient = data
             eff_vector = sched_vector
 
-        print(f"{k}\t : Schedule Power = {data.total_energy} J")
+        print(f"{k}\t : Schedule Energy = {data.total_energy} J")
 
+    print(f"Most Eff Schedule Energy = {most_efficient.total_energy} J")
     print_schedule_summary(most_efficient, eff_vector)
     print(f"Most Efficient Schedule Found!")
     print(f"Hyperperiod = {calculate_hyperperiod(most_efficient.tasks)} s")
-    print(f"Power = {compute_power_usage(eff_vector)}")
 
 
 def run_edf(data: ScheduleData):
