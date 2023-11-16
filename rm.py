@@ -19,7 +19,7 @@ def update_deadlines(current_time: int, data: ScheduleData):
 def next(data: ScheduleData):
     #prioritize by lowest period
     next_task: None or Task = None
-    next_lowest_period = None
+    #next_lowest_period = None
 
     for t in data.tasks:
         if(t.time_remaining > 0):
