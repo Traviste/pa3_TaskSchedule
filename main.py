@@ -1,6 +1,6 @@
 import sys
 from utils import Task, ScheduleData, parse_input_file
-from edf import run_edf
+from edf import run_edf, find_optimal_edf_ee
 from rm import run_rm
 if __name__ == '__main__':
     if len(sys.argv) < 3 or len(sys.argv) > 4:
@@ -29,3 +29,4 @@ if __name__ == '__main__':
         run_edf(sched_data)
     elif sched_type == "EDF" and ee:
         print("Using EE-EDF")
+        find_optimal_edf_ee(sched_data)

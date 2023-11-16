@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 # In MHz
 CLOCK_STATE_TO_FREQ_MAP = ["1188", "918", "648", "384", "IDLE"]
+IDLE_STATE = 4
 
 
 @dataclass
@@ -30,6 +31,10 @@ class ScheduleData:
     exec_time: int
     power_by_clock_state: list[int]
     tasks: list[Task]
+
+    total_energy: float = 0.0
+    idle_rate: float = 0.0
+    exec_time_used: int = 0
 
 
 # parse file function
