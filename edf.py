@@ -150,7 +150,7 @@ def run_edf(data: ScheduleData):
     valid = True
 
     for i in range(1, data.exec_time + 1):
-        valid = update_task_deadlines(i, data)
+        valid = valid and update_task_deadlines(i, data)
         earliest = find_earliest_incomplete_task(data)
 
         if earliest is not None:
