@@ -52,6 +52,7 @@ def find_optimal_rm_ee(base_data: ScheduleData):
         # Apply each combination of states to the tasks
         for i, task in enumerate(data.tasks):
             task.clock_state = state[i]
+            task.time_remaining = task.wcet_by_clock_state[task.clock_state]
 
         sched_vector: list[ScheduleBlock] = []
 
