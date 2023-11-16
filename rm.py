@@ -10,15 +10,18 @@ def update_deadlines(current_time: int, data: ScheduleData):
 def next(data: ScheduleData):
     #prioritize by lowest period
     next_lowest_period = None
-    next_period = None
+    next_task = None
     for t in data.tasks:
         if next_lowest_period == None:
             next_lowest_period = t.period
         else:
             if (t.time_remaining > 0 and t.period < next_lowest_period):
-                next_period = t
-    
-    return next_period
+                next_lowest_period = t.period    
+
+    for t in data.tasks:
+        if(t.period == next_lowest_period and t.time_remaining > 0):
+            next_task = t
+    return next_task
 
 def run_rm(data: ScheduleData):
     hyperperiod = data.exec_time
