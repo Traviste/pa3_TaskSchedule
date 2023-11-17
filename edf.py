@@ -1,169 +1,95 @@
-from utils import ScheduleData, Task, ScheduleBlock, CLOCK_STATE_TO_FREQ_MAP, IDLE_STATE
+from utils import ScheduleData, ScheduleBlock, IDLE_STATE, print_schedule_summary
 from itertools import product
-from math import gcd
-from functools import reduce
 import copy
 
 
-def print_schedule_summary(data: ScheduleData, sched_vector: list[ScheduleBlock]):
-    last_block = sched_vector[0]
+# Run EDF Scheduler
+def run_edf(data: ScheduleData):
+    sched_valid = True
 
-    time_count = 1
-    time_started = 1
+    # Simulate the schedule
+    for t in range(1, data.exec_time + 1):
+        # Update deadlines based on current time and check for deadline misses
+        sched_valid = sched_valid and data.update_task_deadlines(t)
+        # Get the next task by earliest deadline
+        next_task = data.next_incomplete_task_by_earliest_deadline()
 
-    for i in range(1, len(sched_vector)):
-
-        if (sched_vector[i].task_name == last_block.task_name) and i != (len(sched_vector) - 1):
-            time_count = time_count + 1
+        # If we have a new earliest task, run the task, and add it to the schedule, otherwise add an IDLE
+        if next_task is not None:
+            next_task.time_remaining -= 1
+            data.sched_vector.append(
+                ScheduleBlock(next_task.name, next_task.clock_state, data.power_by_clock_state[next_task.clock_state]))
         else:
-            power_used = (last_block.power_at_frequency * time_count) / 1000.0
+            data.sched_vector.append(ScheduleBlock("IDLE", 4, data.power_by_clock_state[4]))
 
-            print(f"{time_started}\t{last_block.task_name}\t"
-                  f"{CLOCK_STATE_TO_FREQ_MAP[last_block.frequency]}\t{time_count}\t{power_used} J")
-
-            time_count = 1
-            time_started = i + 1
-
-        if sched_vector[i].frequency == IDLE_STATE:
-            data.exec_time_used += 1
-
-        last_block = sched_vector[i]
-
-    data.idle_rate = (data.exec_time_used / data.exec_time)
-    data.exec_time_used = data.exec_time - data.exec_time_used
-    data.total_energy = compute_power_usage(sched_vector)
-
-    print(
-        f"Idle Rate = {data.idle_rate * 100.0} %\tTotal Energy = {data.total_energy} J\tExec Time Used = {data.exec_time_used} s")
+    # Print summary and show if it is valid
+    print_schedule_summary(data, data.sched_vector)
+    print(f"Valid EDF Schedule up to {data.exec_time} s ? = {sched_valid}")
+    if not sched_valid:
+        print("NOTE: SCHEDULE IS INVALID, DEADLINE MISSED")
 
 
-def update_task_deadlines(current_time: int, data: ScheduleData):
-    valid = True
-
-    for t in data.tasks:
-        if current_time == t.next_deadline:
-            if t.time_remaining > 0:
-                valid = False
-            t.next_deadline = t.next_deadline + t.period
-            t.time_remaining = t.wcet_by_clock_state[t.clock_state]
-
-    return valid
-
-
-def calculate_hyperperiod(tasks: list[Task]):
-    periods = [task.period for task in tasks]
-    return reduce((lambda a, b: a * b // gcd(a, b)), periods, 1)
-
-
-def compute_power_usage(sched_vector: list[ScheduleBlock], n_iterations_inclusive=1000):
-    power = 0.0
-
-    for i, b in enumerate(sched_vector):
-        if i == n_iterations_inclusive:
-            break
-        power += b.power_at_frequency
-
-    return power / 1000.0
-
-
-def find_earliest_incomplete_task(data: ScheduleData):
-    earliest: None or Task = None
-
-    for t in data.tasks:
-        if t.time_remaining > 0:
-            if earliest is None:
-                earliest = t
-            else:
-                if t.next_deadline < earliest.next_deadline:
-                    earliest = t
-
-    return earliest
-
-
+# Run EDF EE optimizer
 def find_optimal_edf_ee(base_data: ScheduleData):
-
     # Generate all possible combinations of clock states for the given tasks
     state_combinations = product(range(4), repeat=len(base_data.tasks))
 
     most_efficient: None or ScheduleData = None
-    eff_vector: None or list[ScheduleBlock] = None
+    h = base_data.calculate_hyperperiod()
 
-    h = calculate_hyperperiod(base_data.tasks)
-
-    # Run every possible state
+    # For every possible state
     for k, state in enumerate(state_combinations):
         # At this point we are trying to run 1 possible schedule
-        data = copy.deepcopy(base_data)
-        valid = True
+        data: ScheduleData = copy.deepcopy(base_data)
+        sched_valid = True
 
         # Apply each combination of states to the tasks
         for i, task in enumerate(data.tasks):
             task.clock_state = state[i]
             task.time_remaining = task.wcet_by_clock_state[task.clock_state]
 
-        sched_vector: list[ScheduleBlock] = []
-
         # Simulate the schedule
         for t in range(1, h + 1):
-            # update deadlines based on current time and check for deadline misses
-            if not update_task_deadlines(t, data):
+            # Update deadlines based on current time and check for deadline misses
+            sched_valid = sched_valid and data.update_task_deadlines(t)
+
+            # If we have a deadline miss, schedule is invalid so break
+            if not sched_valid:
                 break
 
-            earliest = find_earliest_incomplete_task(data)
+            # Find the next task by earliest deadline
+            earliest = data.next_incomplete_task_by_earliest_deadline()
 
+            # If we have a new earliest task, run the task and add it to the schedule
             if earliest is not None:
-                earliest.time_remaining = earliest.time_remaining - 1
+                earliest.time_remaining -= 1
                 data.total_energy += data.power_by_clock_state[earliest.clock_state]
 
-                if t <= data.exec_time:
-                    sched_vector.append(
-                        ScheduleBlock(earliest.name, earliest.clock_state,
-                                      data.power_by_clock_state[earliest.clock_state]))
+                data.sched_vector.append(
+                    ScheduleBlock(earliest.name, earliest.clock_state, data.power_by_clock_state[earliest.clock_state])
+                )
             else:
-                data.total_energy += data.power_by_clock_state[4]
+                data.total_energy += data.power_by_clock_state[IDLE_STATE]
+                data.sched_vector.append(ScheduleBlock("IDLE", IDLE_STATE, data.power_by_clock_state[IDLE_STATE]))
 
-                if t <= data.exec_time:
-                    sched_vector.append(ScheduleBlock("IDLE", 4, data.power_by_clock_state[4]))
-
-        if not valid:
-            # print(f"{k}\t : Invalid Schedule")
+        if not sched_valid:
+            print(f"{k}\t : Invalid Schedule")
             continue
 
         # data.total_energy = compute_power_usage(sched_vector, n_iterations_inclusive=1000)
         data.total_energy = data.total_energy / 1000.0
 
-        # Find schedule with least energy usage
+        # Find schedule with the least energy usage
         if most_efficient is None:
             most_efficient = data
-            eff_vector = sched_vector
-
         elif most_efficient.total_energy > data.total_energy:
             most_efficient = data
-            eff_vector = sched_vector
 
-        print(f"{k}\t : Schedule Energy = {data.total_energy} J")
+        print(f"{k}\t : Schedule Energy (across hyperperiod {h}) = {data.total_energy} J")
 
-    print(f"Most Eff Schedule Energy = {most_efficient.total_energy} J")
-    print_schedule_summary(most_efficient, eff_vector)
-    print(f"Most Efficient Schedule Found!")
-    print(f"Hyperperiod = {calculate_hyperperiod(most_efficient.tasks)} s")
-
-
-def run_edf(data: ScheduleData):
-    sched_vector: list[ScheduleBlock] = []
-    valid = True
-
-    for i in range(1, data.exec_time + 1):
-        valid = valid and update_task_deadlines(i, data)
-        earliest = find_earliest_incomplete_task(data)
-
-        if earliest is not None:
-            earliest.time_remaining = earliest.time_remaining - 1
-
-            sched_vector.append(
-                ScheduleBlock(earliest.name, earliest.clock_state, data.power_by_clock_state[earliest.clock_state]))
-        else:
-            sched_vector.append(ScheduleBlock("IDLE", 4, data.power_by_clock_state[4]))
-
-    print_schedule_summary(data, sched_vector)
-    print(f"Valid Sched. ? = {valid}")
+    if most_efficient is not None:
+        print_schedule_summary(most_efficient, most_efficient.sched_vector)
+        print(f"\nValid EDF EE Schedule Found!")
+        print(f"Most Efficient Schedule Total Energy = {most_efficient.total_energy} J")
+    else:
+        print("NO VALID EDF EE SCHEDULES FOUND")
